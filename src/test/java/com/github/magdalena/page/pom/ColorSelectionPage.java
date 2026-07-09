@@ -14,12 +14,16 @@ public class ColorSelectionPage extends BasePage {
         super(page);
     }
 
-    public void chooseColour(String colour) {
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName(colour)).click();
+    public void chooseColour(String colourFamily) {
+        clickButtonByName(colourFamily);
     }
 
-    public void choseSpecificTypeColor(String colour) {
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName(colour)).click();
+    public void chooseShade(String shade) {
+        clickButtonByName(shade);
+    }
+
+    private void clickButtonByName(String name) {
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName(name)).click();
     }
 
     public void buyATesterColour() {
