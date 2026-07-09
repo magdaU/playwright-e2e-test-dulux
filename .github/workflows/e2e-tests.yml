@@ -110,3 +110,34 @@ jobs:
           publish_dir: target/allure-report
           publish_branch: gh-pages
           commit_message: "ci: publish Allure report [skip ci]"
+
+  visual-regression:
+    name: Visual regression (non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      HEADLESS: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Install Playwright browser
+        run: mvn -B -q exec:java -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
+
+      - name: Run visual regression checks
+        run: mvn -B -Dheadless=true -Dtest=VisualRegressionTest test
+
+      - name: Upload visual diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: target/visual-diffs
+          if-no-files-found: ignore

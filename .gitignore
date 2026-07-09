@@ -46,3 +46,7 @@ build/
 !docs/
 !docs/**
 !docs/**/*.png
+
+### Visual regression baselines (must be committed for diffing to work) ###
+!src/test/resources/visual-baselines/
+!src/test/resources/visual-baselines/**/*.png
