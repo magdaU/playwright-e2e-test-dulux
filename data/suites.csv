@@ -1,7 +1,7 @@
 "DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
 "  To preview a colour before making a purchase decision
   As a Dulux customer
-  I want to open the Visualizer from a selected shade page","6341","Desktop customer opens the Visualizer for a shade","","2026-06-24","passed","2026-06-24","","Open the Dulux Visualizer experience","Desktop customer opens the Visualizer for a shade",""
+  I want to open the Visualizer from a selected shade page","7014","Desktop customer opens the Visualizer for a shade","","2026-07-09","passed","2026-07-09","","Open the Dulux Visualizer experience","Desktop customer opens the Visualizer for a shade",""
 "  To try a paint colour at home before buying a full tin
   As a Dulux customer
-  I want to add a tester for a chosen shade to my basket","20757","Desktop customer adds a tester from the colour finder","","2026-06-24","passed","2026-06-24","","Purchase a colour tester","Desktop customer adds a tester from the colour finder",""
+  I want to add a tester for a chosen shade to my basket","45285","Desktop customer adds a tester from the colour finder","","2026-07-09","broken","2026-07-09","","Purchase a colour tester","Desktop customer adds a tester from the colour finder",""
