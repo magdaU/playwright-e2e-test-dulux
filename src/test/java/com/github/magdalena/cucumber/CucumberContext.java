@@ -74,7 +74,7 @@ public class CucumberContext {
         navigationPage.clickDropdownFindColour();
         navigationPage.clickFindColour();
         colorSelectionPage.chooseColour(colourFamily);
-        colorSelectionPage.choseSpecificTypeColor(shade);
+        colorSelectionPage.chooseShade(shade);
     }
 
     public void searchForShade(String shade) {

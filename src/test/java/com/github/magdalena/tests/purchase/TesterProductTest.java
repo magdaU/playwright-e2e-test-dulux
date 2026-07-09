@@ -55,7 +55,7 @@ public class TesterProductTest extends BaseTest {
         navigationPage.clickDropdownFindColour();
         navigationPage.clickFindColour();
         colorSelectionPage.chooseColour(colour);
-        colorSelectionPage.choseSpecificTypeColor(colourType);
+        colorSelectionPage.chooseShade(colourType);
         colorSelectionPage.buyATesterColour();
         alertComponent.closeAlert();
         navigationPage.openShoppingCart();
@@ -91,7 +91,7 @@ public class TesterProductTest extends BaseTest {
         navigationPage.clickDropdownFindColour();
         navigationPage.clickFindColour();
         colorSelectionPage.chooseColour(colour);
-        colorSelectionPage.choseSpecificTypeColor(colourType);
+        colorSelectionPage.chooseShade(colourType);
         colorSelectionPage.buyATesterColour();
         alertComponent.closeAlert();
         navigationPage.openShoppingCart();
