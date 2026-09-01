@@ -1,1 +1,1 @@
-{"reportName":"Dulux E2E Smoke Suite","testRuns":[],"statistic":{"failed":0,"broken":1,"skipped":0,"passed":1,"unknown":0,"total":2},"time":{"start":1783592756336,"stop":1783592807056,"duration":50720,"minDuration":6428,"maxDuration":44256,"sumDuration":50684}}
+{"reportName":"Dulux E2E Smoke Suite","testRuns":[],"statistic":{"failed":0,"broken":1,"skipped":0,"passed":1,"unknown":0,"total":2},"time":{"start":1788266400929,"stop":1788266450206,"duration":49277,"minDuration":6266,"maxDuration":42971,"sumDuration":49237}}
