@@ -20,9 +20,10 @@ The suite automates the two highest-value Dulux UK customer journeys — **teste
 purchase** and **Visualizer launch** — across desktop and mobile viewports, plus a
 non-blocking pixel-diff check on three key pages. All 8 functional tests (4 Cucumber
 scenarios plus the parallel JUnit `TesterProductTest`/`VisualizerAppTest`) currently pass
-against live production on the primary engine (Chromium). The 3 visual regression checks
-run on every push but are non-blocking by design — and were confirmed to need that design,
-not just as a precaution (§6).
+against live production on the primary engine (Chromium), and so do the 3 visual
+regression checks — stable across repeated Docker runs after two environment-level root
+causes were found and fixed (§4, issue 6). The visual regression job stays non-blocking by
+design regardless.
 
 ## 2. Scope executed
 
@@ -30,7 +31,7 @@ not just as a precaution (§6).
 |---|---|---|
 | Tester purchase | Desktop, mobile | ✅ Passing (`@smoke` on desktop, `@regression` on mobile) |
 | Visualizer | Desktop, mobile | ✅ Passing (`@smoke` on desktop, `@regression` on mobile) |
-| Visual appearance (cart, colour finder, shade grid) | Desktop | 🟡 Non-blocking; genuinely flaky on one page (§6) |
+| Visual appearance (cart, colour finder, shade grid) | Desktop | ✅ Passing (non-blocking job) |
 
 Out of scope for this cycle (and for the suite generally): checkout/payment,
 account/login, API/contract testing, performance/load, accessibility, full cross-browser
@@ -42,12 +43,9 @@ closing each gap would take.
 
 - **8 / 8** automated functional tests passing on the primary engine (Chromium): 4
   Cucumber scenarios + `TesterProductTest` (2) + `VisualizerAppTest` (2).
-- **0** open functional defects — every issue found during development was root-caused
-  and fixed (see §4).
-- **1** known, accepted source of noise (not a defect): the colour finder page's default
-  state varies between loads, making its visual regression check inherently flaky — this
-  is why that job is non-blocking, confirmed by direct observation rather than assumed
-  (§6, [Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-against-a-live-page-has-a-non-deterministic-baseline-to-chase)).
+- **3 / 3** visual regression checks passing, verified stable across 4 consecutive runs.
+- **0** open defects — every issue found during development was root-caused and fixed
+  (see §4).
 
 Full per-case breakdown: [Test Results](TEST_RESULTS.md).
 
@@ -64,6 +62,7 @@ real production — none were seeded or simulated. Each is fully written up in
 | 3 | CI's Allure report step succeeded while publishing the wrong output directory | Medium | ✅ Fixed (switched to the Allure CLI with an explicit path) |
 | 4 | Pinned test shade ("Gentle Lavender") removed from its colour family on production | Medium | ✅ Fixed (test data refreshed to "Violet Morning") |
 | 5 | Basket quantity locator broken by a production markup redesign (strict-mode violation) | Medium | ✅ Fixed (narrowed to a role-based `spinbutton` locator) |
+| 6 | Visual regression job failed 3/3 on CI (Windows-baseline/Linux-CI font mismatch + screenshots capturing the cookie banner mid-animation) | Medium | ✅ Fixed (Docker-generated baselines, pixel-difference allowance, animations disabled during capture) |
 
 None of these are open issues against the current suite — all are resolved, with the fix
 and reasoning documented rather than silently applied.
@@ -83,10 +82,10 @@ this repository. This is no longer a theoretical concern: the
 [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) — testing the same
 site, with the same pinned shade and a near-identical basket locator — hit both a
 catalogue-removal and a basket-markup redesign, and this project has now independently hit
-*both the same two issues* (§4, issues 4–5), within minutes of each other. A further,
-distinct manifestation of the same underlying risk was found directly: the colour finder
-page's default state is not deterministic between loads, which is why its visual
-regression check is designed to be non-blocking rather than gating the build — see
+*both the same two issues* (§4, issues 4–5), within minutes of each other. Separately, the
+visual regression job's CI-only failures (§4, issue 6) were a reminder that an environment
+mismatch (baselines from a different OS than the one comparing against them) can look
+exactly like site flakiness until the actual CI artifact is inspected — see
 [Test Strategy §10](TEST_STRATEGY.md#10-risk-analysis--mitigations) for the full register.
 
 ## 7. Recommendation

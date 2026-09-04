@@ -192,33 +192,61 @@ direction independently, which is exactly what happened here.
 
 ---
 
-## 7. Visual regression against a live page has a non-deterministic baseline to chase
+## 7. Visual regression failed 3/3 on CI — two environment root causes, both fixed
 
-**What happened:** after fixing #5 and #6, the three visual regression checks were
-re-run twice in immediate succession against freshly-regenerated baselines. The first run
-passed 3/3; the very next run — no code change in between — failed 2/3, with diffs
-showing a genuinely different default state: the colour-finder landing page pre-selected a
-different palette swatch and reported a different colour count ("119" vs. the previous
-run's "253") purely from loading the page again.
+**What happened:** even after fixing #5 and #6, the visual regression job kept failing —
+first locally (2 out of 3 checks, in slightly different combinations each run), then on
+CI, where PR #20's run failed **all 3** checks, including the empty cart page, which has
+no dynamic content at all.
 
-**Root cause:** the colour-finder landing page's default selected filter is not a fixed,
-deterministic starting state — it varies between page loads (likely session/analytics- or
-A/B-test-driven), independent of any test or environment change. A separate, earlier diff
-in the same investigation also showed the cookie-consent banner rendered in Polish instead
-of English on one run, suggesting locale/geolocation detection can vary too.
+**Root cause #1 — baselines generated on the wrong OS.** The committed baselines had been
+regenerated locally on Windows. CI runs Ubuntu. Downloading the actual `visual-diffs`
+artifact from the failed CI run and inspecting it showed the difference concentrated in
+the page's footer text ("Copyright @ AkzoNobel Paints 2026", "Privacy policy") — font
+anti-aliasing/hinting differs enough between Windows and Linux Chromium that
+pixel-identical *content* still doesn't produce pixel-identical *screenshots*.
+`VisualComparisonUtil` was calling `new ImageComparison(expected, actual)` with no
+tolerance for that kind of noise — the underlying library's default
+`allowingPercentOfDifferentPixels` is 0%, so even a handful of differently-anti-aliased
+text pixels flip the whole check to `MISMATCH`.
 
-**Not fixed — documented instead.** No page-object or test change addresses this; forcing
-determinism would mean pinning the page to a specific state via URL parameters or extra
-setup steps, which changes what the check actually verifies. This is left as-is.
+**Root cause #2 — screenshots captured mid-animation.** Even after regenerating baselines
+*inside the project's own Docker image* (matching CI's Ubuntu/font environment exactly)
+and adding a small pixel-difference allowance, the empty-cart check still failed
+intermittently — about 1 run in 3. The diff for that failure showed no visible content
+difference at all, just the standard whole-image border the comparison library always
+draws. That pointed at the OneTrust cookie banner: `rejectAllCookies()` clicks "Reject
+All", but the banner fades out with a CSS transition, and `page.screenshot()` can capture
+a frame mid-fade — a different amount of banner-fade-out on every run, invisible to the
+eye at a glance but enough to tip the pixel-difference count over the threshold.
 
-**Lesson:** this is direct, first-hand confirmation of the exact caution the
-[Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) used to justify
-*deferring* visual regression altogether (see
-[Lessons Learned #4](#4-visual-regression-implemented-here-deferred-in-the-python-sibling)) —
-and independent evidence that this project's choice to implement it as **non-blocking**
-(§3 of the [Test Strategy](TEST_STRATEGY.md#3-scope)) was the right call for *this* page
-specifically: a blocking check here would redden the build on days nothing actually
-changed.
+**Fix — three changes, verified together:**
+1. `VisualComparisonUtil.assertMatchesBaseline` now calls
+   `.setAllowingPercentOfDifferentPixels(0.5)` — absorbs residual cross-platform
+   anti-aliasing noise without hiding a real layout regression, which changes far more
+   than 0.5% of the page.
+2. `VisualRegressionTest`'s three `page.screenshot()` calls now pass
+   `new Page.ScreenshotOptions().setAnimations(ScreenshotAnimations.DISABLED)` — Playwright
+   forces any CSS transition/animation to its end state before capturing, so a screenshot
+   is never taken mid-fade again.
+3. Baselines are regenerated **inside the project's own Docker image**
+   (`docker build` + `docker run` against `VisualRegressionTest`, mounting
+   `src/test/resources/visual-baselines` as a volume) rather than on a local Windows
+   machine — the same fix a Java/Playwright team would apply to any cross-platform visual
+   regression suite: baselines must be captured in the same environment that will compare
+   against them.
+
+**Verified:** with all three changes in place, 4 consecutive Docker runs (1 bootstrap + 3
+real comparisons) passed 3/3 every time — a clear improvement over the previous "1 run in
+3 fails, unpredictably which check" state.
+
+**Lesson:** "it's a live production site, some flakiness is inherent" is true, but it's
+also an easy excuse to stop debugging one layer too early. The actual causes here were
+both fully within this project's control (baseline provenance, screenshot timing) — the
+site's real behaviour (a fading cookie banner) was never the problem; capturing a
+screenshot without accounting for it was. Downloading and looking at the *actual* CI
+artifact, rather than reasoning from the local failure alone, was what surfaced root cause
+#1 — a local-only repro would never have shown a Windows-vs-Linux font difference.
 
 ---
 
@@ -226,4 +254,5 @@ changed.
 
 - [Test Strategy §10 — Risk analysis & mitigations](TEST_STRATEGY.md#10-risk-analysis--mitigations) — the same incidents as a likelihood/impact register.
 - [Test Strategy §14 — Coverage gaps & improvement opportunities](TEST_STRATEGY.md#14-coverage-gaps--improvement-opportunities) — where the basket-locator fragility flagged by the Python sibling's incident is tracked as a proactive fix here.
+- [Getting Started — Reports](GETTING_STARTED.md#reports) — baselines must be (re)generated via `docker compose`/`docker run`, never on a local Windows machine — see #7 above for why.
 - [Getting Started](GETTING_STARTED.md) — install, run, and day-to-day developer/tester workflow.

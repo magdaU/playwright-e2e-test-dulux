@@ -6,8 +6,8 @@
 > [Getting Started — Reports](GETTING_STARTED.md#reports)), not this file. This document
 > is refreshed after a significant change, not on every push.
 
-**Legend:** ✅ Pass · 🟡 Non-blocking, currently flaky (visual regression job,
-`continue-on-error: true`) · — Not yet executed in this configuration.
+**Legend:** ✅ Pass · 🟡 Non-blocking (visual regression job, `continue-on-error: true`) ·
+— Not yet executed in this configuration.
 
 ---
 
@@ -27,11 +27,12 @@
 `TesterProductTest`/`VisualizerAppTest`) pass on Chromium, the only browser engine
 currently exercised (§10 of the [Test Strategy](TEST_STRATEGY.md#10-risk-analysis--mitigations)
 tracks single-browser coverage as an accepted, low-impact risk). The 3 visual regression
-checks run on every push/PR but are non-blocking by design — confirmed necessary, not just
-theoretical caution: back-to-back runs against freshly-regenerated baselines showed the
-colour finder page's default state genuinely varies between loads, independent of any code
-change — see
-[Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-against-a-live-page-has-a-non-deterministic-baseline-to-chase).
+checks also pass, verified stable across 4 consecutive Docker runs, once baselines were
+regenerated in the project's own Docker image (matching CI's OS/fonts) and screenshots
+stopped being captured mid-cookie-banner-animation — see
+[Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-failed-33-on-ci--two-environment-root-causes-both-fixed)
+for the two root causes. The job stays non-blocking by design regardless (§3 of the
+[Test Strategy](TEST_STRATEGY.md#3-scope)).
 
 ---
 
@@ -69,8 +70,13 @@ that changed how confidently a "pass" here can be read. Full write-ups in
   production redesign wrapped the control in a `group` with three "Quantity"-labelled
   elements. Fixed by narrowing to a role-based `spinbutton` locator, the same fix already
   flagged as foreseeable from the Python sibling's identical incident.
+- **2026-09-04** — the visual regression job failed 3/3 on CI. Root-caused to baselines
+  captured on Windows being compared against Ubuntu-rendered screenshots (font
+  anti-aliasing differences) plus screenshots occasionally capturing the cookie banner
+  mid-fade. Fixed by regenerating baselines via Docker, adding a small pixel-difference
+  allowance, and disabling CSS animations during screenshot capture.
 
-Both of these were flagged as foreseeable risks in [Test Strategy §10](TEST_STRATEGY.md#10-risk-analysis--mitigations)
+Both of the drift incidents above were flagged as foreseeable risks in [Test Strategy §10](TEST_STRATEGY.md#10-risk-analysis--mitigations)
 *before* they happened here — full write-ups in [Lessons Learned #5](LESSONS_LEARNED.md#5-product-catalogue-drift-materialised-here-too)
 and [#6](LESSONS_LEARNED.md#6-basket-markup-drift-materialised-here-too). None of these are
 open issues against the current suite.

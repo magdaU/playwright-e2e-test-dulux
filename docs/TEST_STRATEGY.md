@@ -87,6 +87,14 @@ committed baseline under `src/test/resources/visual-baselines/` via
 `toHaveScreenshot()` snapshot tooling, so this is a deliberate, dependency-light
 alternative). See [Architecture](architecture.md) for how it's wired.
 
+> **Baselines must be regenerated via Docker, never on a local Windows machine.**
+> Cross-platform font rendering differences (and a cookie-banner CSS transition
+> Playwright's `ScreenshotAnimations.DISABLED` now accounts for) caused every check to
+> fail on CI until the baselines were captured inside the project's own Docker image
+> instead — see [Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-failed-33-on-ci--two-environment-root-causes-both-fixed)
+> for the full root-cause writeup and [Getting Started — Reports](GETTING_STARTED.md#reports)
+> for the regeneration command.
+
 > **A different call than the Python sibling.** The [Python port](https://github.com/magdaU/playwright-python-dulux-uk)
 > considered the same feature and **deliberately deferred** it, reasoning that a
 > production site whose layout is still visibly drifting would make snapshot baselines go
@@ -304,7 +312,6 @@ uncovered and a concrete way each could be tested — not just a note that it's 
 | **Site search** | `NavigationComponent` exposes `searchClickOnPage()`/`inputColorOnSearchBoxAndEnter()` and it's exercised as setup for the Visualizer scenarios, but no scenario asserts search *itself* works for an arbitrary term | Add a scenario: search for a known shade, assert it navigates to that shade's detail page | Low–Medium |
 | **Negative / error-state paths** (e.g. a failed add-to-basket request) | The suite only proves the happy path; a customer-visible error state is invisible to it today | Use Playwright's `page.route()` to intercept and force an error response on the add-to-basket call, then assert the UI surfaces it | Medium |
 | **Full cross-browser coverage on every push** | A Firefox/WebKit-only regression ships on `main` undetected until someone runs the suite manually against another engine | Deliberate trade-off to protect push/PR speed (§10, single-browser risk). If it becomes a real problem, add the two `@smoke` scenarios to a small WebKit job rather than the whole suite | Low (accepted trade-off) |
-| **Colour finder page has a non-deterministic default state** | The landing page's pre-selected palette swatch and displayed colour count vary between loads, confirmed by two consecutive visual regression runs producing different diffs with no code change (see [Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-against-a-live-page-has-a-non-deterministic-baseline-to-chase)) — makes that one baseline inherently noisy | Not planned: pinning the page to a fixed state would mean navigating via extra filter/URL parameters, which changes what the check verifies. Accepted as the reason this job stays non-blocking, not treated as a bug to fix | Low (accepted, explains a design choice already made) |
 | **API / contract-level testing** | None today — a backend contract change could break the UI with only this slow, browser-driven E2E layer to catch it | Not currently actionable: Dulux is a third-party site exposing no API we're entitled to test against | Not planned |
 | **Performance / load** | A slow-loading shade page degrades conversion without failing any functional assertion here | Out of scope for a UI E2E suite by design; would need a dedicated tool (Lighthouse CI, k6) against a staging environment | Not planned |
 

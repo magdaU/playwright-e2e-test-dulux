@@ -47,7 +47,14 @@ public final class VisualComparisonUtil {
             }
 
             BufferedImage expected = ImageIO.read(baselinePath.toFile());
-            ImageComparisonResult result = new ImageComparison(expected, actual).compareImages();
+            // Baselines are captured on whatever OS generated them (locally on Windows, or
+            // in CI on Ubuntu); font anti-aliasing/hinting differs enough between platforms
+            // that pixel-identical text never matches at the library's default 0% allowance.
+            // A small non-zero allowance absorbs that rendering noise without hiding a real
+            // layout regression, which changes far more than 0.5% of the page.
+            ImageComparisonResult result = new ImageComparison(expected, actual)
+                    .setAllowingPercentOfDifferentPixels(0.5)
+                    .compareImages();
 
             Allure.addAttachment(snapshotName + " (actual)", new ByteArrayInputStream(actualPng));
             attachDiffIfMismatched(result, snapshotName);

@@ -3,6 +3,8 @@ package com.github.magdalena.tests.visual;
 import com.github.magdalena.page.pom.CartPage;
 import com.github.magdalena.support.VisualComparisonUtil;
 import com.github.magdalena.tests.BaseTest;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.ScreenshotAnimations;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -25,6 +27,12 @@ import org.junit.jupiter.api.Test;
 @Tag("visual")
 public class VisualRegressionTest extends BaseTest {
 
+    // The OneTrust cookie banner fades in/out with a CSS transition; capturing a
+    // screenshot mid-transition produces a diff unrelated to any real layout change.
+    // ScreenshotAnimations.DISABLED forces transitions to their end state first.
+    private static final Page.ScreenshotOptions NO_ANIMATIONS =
+            new Page.ScreenshotOptions().setAnimations(ScreenshotAnimations.DISABLED);
+
     private CartPage cartPage;
 
     @Override
@@ -42,7 +50,7 @@ public class VisualRegressionTest extends BaseTest {
         cartPage.openCartPage();
         homePage.rejectAllCookies();
 
-        VisualComparisonUtil.assertMatchesBaseline(page.screenshot(), "cart-page-empty");
+        VisualComparisonUtil.assertMatchesBaseline(page.screenshot(NO_ANIMATIONS), "cart-page-empty");
     }
 
     @Test
@@ -56,7 +64,7 @@ public class VisualRegressionTest extends BaseTest {
         navigationPage.clickDropdownFindColour();
         navigationPage.clickFindColour();
 
-        VisualComparisonUtil.assertMatchesBaseline(page.screenshot(), "colour-finder-page");
+        VisualComparisonUtil.assertMatchesBaseline(page.screenshot(NO_ANIMATIONS), "colour-finder-page");
     }
 
     @Test
@@ -71,6 +79,6 @@ public class VisualRegressionTest extends BaseTest {
         navigationPage.clickFindColour();
         colorSelectionPage.chooseColour("Violet");
 
-        VisualComparisonUtil.assertMatchesBaseline(page.screenshot(), "violet-shade-selection-page");
+        VisualComparisonUtil.assertMatchesBaseline(page.screenshot(NO_ANIMATIONS), "violet-shade-selection-page");
     }
 }
