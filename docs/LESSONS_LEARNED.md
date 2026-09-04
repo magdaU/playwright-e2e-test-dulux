@@ -120,8 +120,110 @@ is what makes the divergence a case study instead of an inconsistency.
 
 ---
 
+## 5. Product catalogue drift, materialised here too
+
+**What happened:** while re-verifying the suite after upgrading to Java 25, the purchase
+journey (Cucumber, both viewports, and the equivalent JUnit `TesterProductTest`) started
+failing with a Playwright `TimeoutError` waiting for a button named "Gentle Lavender" on
+the "Violet" shade grid — the pinned shade this suite had used as its test data since the
+project began.
+
+**Root cause:** confirmed directly against production (screenshot of the "Violet" family
+page): "Gentle Lavender" is no longer listed. The current line-up is Cotton Breeze, Scent
+Bottle, Violet Morning, Romantic Reverie, Sugared Lilac, Lilac Fancy, Violet Storm,
+Pressed Thistle, Amethyst Starling, Heather Climb, Royal Berry, Deep Aubergine — a genuine
+retailer-side catalogue change, not a test or environment problem. The Visualizer
+scenarios, which reach a shade via search rather than the family grid, kept passing
+throughout — confirming the shade removal was specific to the colour-finder listing, not
+a broader outage.
+
+**Notably:** the [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk)
+had already hit this *exact* removal independently, testing the same production site, and
+had already refreshed its own test data to "Violet Morning" — the same replacement shade
+chosen here, arrived at separately. This is the risk flagged pre-emptively in
+[Test Strategy §10](TEST_STRATEGY.md#10-risk-analysis--mitigations) after reading the
+Python project's own incident write-up; it went from a foreseeable risk to a materialised
+one during this repo's own next full test run.
+
+**Fix:** refreshed the pinned shade to "Violet Morning" across the Gherkin feature files
+and the parallel JUnit tests (`TesterProductTest`, `VisualizerAppTest`); re-generated the
+three visual regression baselines, since the "Violet" grid's committed appearance had also
+changed (both from the catalogue reshuffle and from an unrelated live-chat widget now
+present on the page).
+
+**Lesson:** a risk register entry copied from a sibling project's real incident isn't
+speculative — it's a specific, testable prediction about *this* project's own future. It
+came true within the same working session it was written down in, which is as strong a
+confirmation as this kind of foresight gets — and, as #6 below shows, it wasn't the only
+one that did.
+
+---
+
+## 6. Basket markup drift, materialised here too
+
+**What happened:** immediately after fixing #5 above, re-running the purchase journey hit
+a *new* failure: `com.microsoft.playwright.PlaywrightException: strict mode violation:
+getByLabel("Quantity") resolved to 4 elements`.
+
+**Root cause:** the basket's quantity control had been redesigned into a
+`<div role="group" aria-label="Quantity">` wrapping a decrease button, the quantity
+`<input>`, and an increase button — all four elements (the group plus its three children)
+expose an accessible name containing "Quantity", so `getByLabel("Quantity")` in
+`CartPage.getQuantity()` matched all of them instead of one.
+
+**Notably:** this is *exactly* the risk flagged in
+[Test Strategy §14](TEST_STRATEGY.md#14-coverage-gaps--improvement-opportunities) as a
+proactive hardening item, copied from the
+[Python sibling](https://github.com/magdaU/playwright-python-dulux-uk)'s own identical
+incident — down to the same `group`-wrapping-three-labelled-elements markup shape. It was
+flagged as "due, not hypothetical" in the same commit that fixed #5, and materialised
+before that commit was even pushed.
+
+**Fix:** narrowed `CartPage.getQuantity()` from `page.getByLabel("Quantity")` to
+`page.getByRole(AriaRole.SPINBUTTON, new Page.GetByRoleOptions().setName("Quantity input"))`
+— targeting the input specifically by role, exactly as the Python sibling's own fix did.
+
+**Lesson:** two separately-predicted risks, both sourced from the same sibling project's
+history, both materialised in the same test run. When a risk register entry cites another
+project's *specific, concrete* incident as evidence rather than a generic "production can
+change" caveat, treat the predicted fix as a to-do, not a maybe — the cost of applying it
+pre-emptively is far lower than the cost of two production sites drifting in the same
+direction independently, which is exactly what happened here.
+
+---
+
+## 7. Visual regression against a live page has a non-deterministic baseline to chase
+
+**What happened:** after fixing #5 and #6, the three visual regression checks were
+re-run twice in immediate succession against freshly-regenerated baselines. The first run
+passed 3/3; the very next run — no code change in between — failed 2/3, with diffs
+showing a genuinely different default state: the colour-finder landing page pre-selected a
+different palette swatch and reported a different colour count ("119" vs. the previous
+run's "253") purely from loading the page again.
+
+**Root cause:** the colour-finder landing page's default selected filter is not a fixed,
+deterministic starting state — it varies between page loads (likely session/analytics- or
+A/B-test-driven), independent of any test or environment change. A separate, earlier diff
+in the same investigation also showed the cookie-consent banner rendered in Polish instead
+of English on one run, suggesting locale/geolocation detection can vary too.
+
+**Not fixed — documented instead.** No page-object or test change addresses this; forcing
+determinism would mean pinning the page to a specific state via URL parameters or extra
+setup steps, which changes what the check actually verifies. This is left as-is.
+
+**Lesson:** this is direct, first-hand confirmation of the exact caution the
+[Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) used to justify
+*deferring* visual regression altogether (see
+[Lessons Learned #4](#4-visual-regression-implemented-here-deferred-in-the-python-sibling)) —
+and independent evidence that this project's choice to implement it as **non-blocking**
+(§3 of the [Test Strategy](TEST_STRATEGY.md#3-scope)) was the right call for *this* page
+specifically: a blocking check here would redden the build on days nothing actually
+changed.
+
+---
+
 ## See also
 
-- [Test Strategy §10 — Risk analysis & mitigations](TEST_STRATEGY.md#10-risk-analysis--mitigations) — the same incidents as a likelihood/impact register, plus foreseeable risks not yet materialised here.
+- [Test Strategy §10 — Risk analysis & mitigations](TEST_STRATEGY.md#10-risk-analysis--mitigations) — the same incidents as a likelihood/impact register.
 - [Test Strategy §14 — Coverage gaps & improvement opportunities](TEST_STRATEGY.md#14-coverage-gaps--improvement-opportunities) — where the basket-locator fragility flagged by the Python sibling's incident is tracked as a proactive fix here.
 - [Getting Started](GETTING_STARTED.md) — install, run, and day-to-day developer/tester workflow.

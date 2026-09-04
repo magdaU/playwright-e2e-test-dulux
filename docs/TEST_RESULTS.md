@@ -6,8 +6,8 @@
 > [Getting Started — Reports](GETTING_STARTED.md#reports)), not this file. This document
 > is refreshed after a significant change, not on every push.
 
-**Legend:** ✅ Pass · 🟡 Non-blocking (visual regression job, `continue-on-error: true`) ·
-— Not yet executed in this configuration.
+**Legend:** ✅ Pass · 🟡 Non-blocking, currently flaky (visual regression job,
+`continue-on-error: true`) · — Not yet executed in this configuration.
 
 ---
 
@@ -23,11 +23,15 @@
 | TC-06 | Colour finder landing page visual baseline | 🟡 | — | Non-blocking `visual-regression` CI job |
 | TC-07 | Violet shade grid visual baseline | 🟡 | — | Non-blocking `visual-regression` CI job |
 
-**Overall status:** all 4 Cucumber scenarios pass on Chromium, the only browser engine
+**Overall status:** all 8 functional tests (4 Cucumber scenarios + the parallel JUnit
+`TesterProductTest`/`VisualizerAppTest`) pass on Chromium, the only browser engine
 currently exercised (§10 of the [Test Strategy](TEST_STRATEGY.md#10-risk-analysis--mitigations)
 tracks single-browser coverage as an accepted, low-impact risk). The 3 visual regression
-checks run on every push/PR but are non-blocking by design — see
-[Lessons Learned #4](LESSONS_LEARNED.md#4-visual-regression-implemented-here-deferred-in-the-python-sibling).
+checks run on every push/PR but are non-blocking by design — confirmed necessary, not just
+theoretical caution: back-to-back runs against freshly-regenerated baselines showed the
+colour finder page's default state genuinely varies between loads, independent of any code
+change — see
+[Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-against-a-live-page-has-a-non-deterministic-baseline-to-chase).
 
 ---
 
@@ -54,8 +58,22 @@ that changed how confidently a "pass" here can be read. Full write-ups in
 - **2026-07-09** — no functional failure, but a code-review finding: `ColorSelectionPage`
   had two locator methods with identical bodies, a latent risk that a future fix to one
   would silently miss the other. Collapsed into a shared helper.
+- **2026-09-04** — while re-verifying the suite after a Java 25 upgrade, the pinned test
+  shade "Gentle Lavender" was found removed from the "Violet" family on production
+  (confirmed via screenshot), failing every purchase-journey test that reached it through
+  the colour finder. Refreshed test data to "Violet Morning". The
+  [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) had already hit
+  and fixed the identical removal independently.
+- **2026-09-04** — immediately after the fix above, the basket quantity locator
+  (`getByLabel("Quantity")`) started failing with a Playwright strict-mode violation — a
+  production redesign wrapped the control in a `group` with three "Quantity"-labelled
+  elements. Fixed by narrowing to a role-based `spinbutton` locator, the same fix already
+  flagged as foreseeable from the Python sibling's identical incident.
 
-None of these are open issues against the current suite.
+Both of these were flagged as foreseeable risks in [Test Strategy §10](TEST_STRATEGY.md#10-risk-analysis--mitigations)
+*before* they happened here — full write-ups in [Lessons Learned #5](LESSONS_LEARNED.md#5-product-catalogue-drift-materialised-here-too)
+and [#6](LESSONS_LEARNED.md#6-basket-markup-drift-materialised-here-too). None of these are
+open issues against the current suite.
 
 ## See also
 

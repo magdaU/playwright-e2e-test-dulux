@@ -74,7 +74,7 @@ each design choice.
 
 ## Prerequisites
 
-- **Java 21**
+- **Java 25**
 - **Maven**
 - Internet access (tests run against `dulux.co.uk`)
 

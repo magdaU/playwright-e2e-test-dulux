@@ -49,7 +49,7 @@ viewport.
 **What it is:** the family → shade drill-down reached via **"Find a colour"**.
 
 **Key behaviour:**
-- Colour **families** (e.g. "Violet") and individual **shades** (e.g. "Gentle Lavender")
+- Colour **families** (e.g. "Violet") and individual **shades** (e.g. "Violet Morning")
   are each rendered as a named button — selected via `getByRole(BUTTON, name=...)`, shared
   between `chooseColour()` and `chooseShade()` via a single `clickButtonByName()` helper
   (see [Lessons Learned #2](LESSONS_LEARNED.md#2-duplicated-locator-methods-that-could-silently-drift-apart)

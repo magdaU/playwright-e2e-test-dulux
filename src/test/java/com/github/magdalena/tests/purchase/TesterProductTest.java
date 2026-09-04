@@ -39,12 +39,12 @@ public class TesterProductTest extends BaseTest {
     @Test
     @Story("Add tester to cart – Desktop")
     @Severity(SeverityLevel.CRITICAL)
-    @Description("Desktop customer (1920×1080) navigates via top nav colour finder and adds a Gentle Lavender tester to the basket")
+    @Description("Desktop customer (1920×1080) navigates via top nav colour finder and adds a Violet Morning tester to the basket")
     void whenDesktop_thenShouldAddTesterToCart() {
         // GIVEN
         setUpDesktop();
         String colour = "Violet";
-        String colourType = "Gentle Lavender";
+        String colourType = "Violet Morning";
 
         cartPage.openCartPage();
         homePage.rejectAllCookies();
@@ -74,12 +74,12 @@ public class TesterProductTest extends BaseTest {
     @Test
     @Story("Add tester to cart – Mobile")
     @Severity(SeverityLevel.CRITICAL)
-    @Description("Mobile customer (375×667) navigates via hamburger menu colour finder and adds a Gentle Lavender tester to the basket")
+    @Description("Mobile customer (375×667) navigates via hamburger menu colour finder and adds a Violet Morning tester to the basket")
     void whenMobile_thenShouldAddTesterToCart() {
         // GIVEN
         setUpMobile();
         String colour = "Violet";
-        String colourType = "Gentle Lavender";
+        String colourType = "Violet Morning";
 
         cartPage.openCartPage();
         homePage.rejectAllCookies();
