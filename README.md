@@ -92,8 +92,13 @@ docker compose up --build
 
 ## 📚 Docs
 
-- [Test Strategy](docs/TEST_STRATEGY.md) — what we test, why, scope, coverage.
-- [Architecture](docs/architecture.md) — tech stack, design rationale, project structure.
+- [Getting Started](docs/GETTING_STARTED.md) — what this project is, what it demonstrates, prerequisites, install & run, day-to-day developer/tester workflow.
+- [Features Guide](docs/FEATURES_GUIDE.md) — a functional walkthrough of the site areas under test.
+- [Test Strategy](docs/TEST_STRATEGY.md) — what we test, why, scope, risk analysis, coverage gaps, roadmap.
+- [Test Plan](docs/TEST_PLAN.md) · [Test Cases](docs/TEST_CASES.md) · [Test Results](docs/TEST_RESULTS.md) · [Test Summary Report](docs/TEST_SUMMARY_REPORT.md) — the supporting QA artifacts for this suite.
+- [Architecture](docs/architecture.md) — tech stack, design rationale, project structure, a full sample scenario walkthrough.
+- [Lessons Learned](docs/LESSONS_LEARNED.md) — real issues this suite caught, root-caused and fixed.
+- [Testing Without Requirements](docs/TESTING_WITHOUT_REQUIREMENTS.md) — how test scope is derived with no internal spec available.
 
 ---
 
