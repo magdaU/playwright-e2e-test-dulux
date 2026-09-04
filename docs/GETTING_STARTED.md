@@ -74,7 +74,7 @@ each design choice.
 
 ## Prerequisites
 
-- **Java 21**
+- **Java 25**
 - **Maven**
 - Internet access (tests run against `dulux.co.uk`)
 
@@ -111,6 +111,26 @@ allure serve target/allure-results
 In CI, the report is generated automatically (via the Allure CLI, not the Maven plugin —
 see [Lessons Learned #3](LESSONS_LEARNED.md#3-a-green-ci-step-can-still-publish-the-wrong-report)
 for why) and published to GitHub Pages on every push to `main`.
+
+### Regenerating visual regression baselines
+
+**Always regenerate via Docker — never on a local Windows machine.** CI runs Ubuntu;
+Windows and Linux render fonts differently enough to fail every check even when nothing
+actually changed (see [Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-failed-33-on-ci--two-environment-root-causes-both-fixed)):
+
+```bash
+rm src/test/resources/visual-baselines/*.png
+docker build -t dulux-e2e-baseline -f Dockerfile .
+docker run --rm --shm-size=1gb \
+  -v "$(pwd)/src/test/resources/visual-baselines:/app/src/test/resources/visual-baselines" \
+  dulux-e2e-baseline \
+  sh -c "mvn -B -Dheadless=true -Dtest=VisualRegressionTest test"
+```
+
+`VisualComparisonUtil` writes a screenshot as the new baseline whenever the file doesn't
+exist yet, so deleting the old ones first and running the container once is enough to
+bootstrap fresh ones. Commit the regenerated PNGs along with whatever page-object or
+feature change prompted the refresh.
 
 ## Working with the Project (Developer / Tester Guide)
 

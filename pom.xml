@@ -7,12 +7,12 @@
     <artifactId>dulux-e2e-tests</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cucumber.version>7.18.1</cucumber.version>
         <allure.version>2.29.1</allure.version>
-        <aspectj.version>1.9.22</aspectj.version>
+        <aspectj.version>1.9.24</aspectj.version>
     </properties>
     <dependencies>
         <!-- Playwright -->
@@ -101,9 +101,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.13.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>25</release>
                 </configuration>
             </plugin>
             <plugin>

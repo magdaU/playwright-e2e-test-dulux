@@ -23,11 +23,16 @@
 | TC-06 | Colour finder landing page visual baseline | 🟡 | — | Non-blocking `visual-regression` CI job |
 | TC-07 | Violet shade grid visual baseline | 🟡 | — | Non-blocking `visual-regression` CI job |
 
-**Overall status:** all 4 Cucumber scenarios pass on Chromium, the only browser engine
+**Overall status:** all 8 functional tests (4 Cucumber scenarios + the parallel JUnit
+`TesterProductTest`/`VisualizerAppTest`) pass on Chromium, the only browser engine
 currently exercised (§10 of the [Test Strategy](TEST_STRATEGY.md#10-risk-analysis--mitigations)
 tracks single-browser coverage as an accepted, low-impact risk). The 3 visual regression
-checks run on every push/PR but are non-blocking by design — see
-[Lessons Learned #4](LESSONS_LEARNED.md#4-visual-regression-implemented-here-deferred-in-the-python-sibling).
+checks also pass, verified stable across 4 consecutive Docker runs, once baselines were
+regenerated in the project's own Docker image (matching CI's OS/fonts) and screenshots
+stopped being captured mid-cookie-banner-animation — see
+[Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-failed-33-on-ci--two-environment-root-causes-both-fixed)
+for the two root causes. The job stays non-blocking by design regardless (§3 of the
+[Test Strategy](TEST_STRATEGY.md#3-scope)).
 
 ---
 
@@ -54,8 +59,27 @@ that changed how confidently a "pass" here can be read. Full write-ups in
 - **2026-07-09** — no functional failure, but a code-review finding: `ColorSelectionPage`
   had two locator methods with identical bodies, a latent risk that a future fix to one
   would silently miss the other. Collapsed into a shared helper.
+- **2026-09-04** — while re-verifying the suite after a Java 25 upgrade, the pinned test
+  shade "Gentle Lavender" was found removed from the "Violet" family on production
+  (confirmed via screenshot), failing every purchase-journey test that reached it through
+  the colour finder. Refreshed test data to "Violet Morning". The
+  [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) had already hit
+  and fixed the identical removal independently.
+- **2026-09-04** — immediately after the fix above, the basket quantity locator
+  (`getByLabel("Quantity")`) started failing with a Playwright strict-mode violation — a
+  production redesign wrapped the control in a `group` with three "Quantity"-labelled
+  elements. Fixed by narrowing to a role-based `spinbutton` locator, the same fix already
+  flagged as foreseeable from the Python sibling's identical incident.
+- **2026-09-04** — the visual regression job failed 3/3 on CI. Root-caused to baselines
+  captured on Windows being compared against Ubuntu-rendered screenshots (font
+  anti-aliasing differences) plus screenshots occasionally capturing the cookie banner
+  mid-fade. Fixed by regenerating baselines via Docker, adding a small pixel-difference
+  allowance, and disabling CSS animations during screenshot capture.
 
-None of these are open issues against the current suite.
+Both of the drift incidents above were flagged as foreseeable risks in [Test Strategy §10](TEST_STRATEGY.md#10-risk-analysis--mitigations)
+*before* they happened here — full write-ups in [Lessons Learned #5](LESSONS_LEARNED.md#5-product-catalogue-drift-materialised-here-too)
+and [#6](LESSONS_LEARNED.md#6-basket-markup-drift-materialised-here-too). None of these are
+open issues against the current suite.
 
 ## See also
 

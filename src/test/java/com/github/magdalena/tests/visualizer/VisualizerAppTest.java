@@ -27,11 +27,11 @@ public class VisualizerAppTest extends BaseTest {
     @Test
     @Story("Visualizer opens in new tab – Desktop")
     @Severity(SeverityLevel.NORMAL)
-    @Description("Desktop customer searches for Gentle Lavender and opens the Visualizer App; it should open in a new browser tab")
+    @Description("Desktop customer searches for Violet Morning and opens the Visualizer App; it should open in a new browser tab")
     void whenDesktop_thenOpenVisualizerAppNewTab() {
         // GIVEN
         setUpDesktop();
-        String colourType = "Gentle Lavender";
+        String colourType = "Violet Morning";
 
         // WHEN
         homePage.openHomePage();
@@ -58,7 +58,7 @@ public class VisualizerAppTest extends BaseTest {
     void whenMobile_thenShowContactSupport() {
         // GIVEN
         setUpMobile();
-        String colourType = "Gentle Lavender";
+        String colourType = "Violet Morning";
 
         // WHEN
         homePage.openHomePage();

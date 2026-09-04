@@ -47,7 +47,7 @@ test strategy.
   checkable *as a state transition* (empty → 1 item, correct product, correct shade)
   without needing to know any pricing or inventory rule behind it.
 - **Equivalence partitioning from what's observably in the catalogue**, not from a data
-  dictionary. A representative shade/family pair ("Gentle Lavender" / "Violet") stands in
+  dictionary. A representative shade/family pair ("Violet Morning" / "Violet") stands in
   for "the colour-finder flow in general" — chosen and manually verified, because there's
   no fixture data to draw from instead.
 - **Self-hosted visual baselines as a requirements substitute for "correct appearance".**

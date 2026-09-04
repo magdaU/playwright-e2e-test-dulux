@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # Reproducible E2E test runner for the Dulux Playwright framework.
-# Mirrors the GitHub Actions pipeline: Java 21, Chromium installed with its
+# Mirrors the GitHub Actions pipeline: Java 25, Chromium installed with its
 # OS dependencies, Cucumber smoke suite run headless.
-FROM maven:3.9-eclipse-temurin-21
+FROM maven:3.9-eclipse-temurin-25
 
 # - PLAYWRIGHT_BROWSERS_PATH: install Chromium to a shared, world-readable path
 #   so the non-root runtime user can find it.

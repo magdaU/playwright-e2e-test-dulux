@@ -7,16 +7,16 @@ Feature: Purchase a colour tester
   @smoke @desktop
   Scenario: Desktop customer adds a tester from the colour finder
     Given a desktop customer starts with an empty basket
-    When the customer browses to shade "Gentle Lavender" from colour family "Violet"
+    When the customer browses to shade "Violet Morning" from colour family "Violet"
     And the customer adds a tester to the basket
     Then the basket contains 1 item
-    And the basket includes tester "Dulux Colour Tester" for shade "Gentle Lavender"
+    And the basket includes tester "Dulux Colour Tester" for shade "Violet Morning"
 
   @mobile
   Scenario: Mobile customer adds a tester from the colour finder
     Given a mobile customer starts with an empty basket
-    When the customer browses to shade "Gentle Lavender" from colour family "Violet" using mobile navigation
+    When the customer browses to shade "Violet Morning" from colour family "Violet" using mobile navigation
     And the customer adds a tester to the basket
     Then the basket contains 1 item
-    And the basket includes tester "Dulux Colour Tester" for shade "Gentle Lavender"
+    And the basket includes tester "Dulux Colour Tester" for shade "Violet Morning"
 

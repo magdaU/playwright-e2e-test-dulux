@@ -87,6 +87,14 @@ committed baseline under `src/test/resources/visual-baselines/` via
 `toHaveScreenshot()` snapshot tooling, so this is a deliberate, dependency-light
 alternative). See [Architecture](architecture.md) for how it's wired.
 
+> **Baselines must be regenerated via Docker, never on a local Windows machine.**
+> Cross-platform font rendering differences (and a cookie-banner CSS transition
+> Playwright's `ScreenshotAnimations.DISABLED` now accounts for) caused every check to
+> fail on CI until the baselines were captured inside the project's own Docker image
+> instead — see [Lessons Learned #7](LESSONS_LEARNED.md#7-visual-regression-failed-33-on-ci--two-environment-root-causes-both-fixed)
+> for the full root-cause writeup and [Getting Started — Reports](GETTING_STARTED.md#reports)
+> for the regeneration command.
+
 > **A different call than the Python sibling.** The [Python port](https://github.com/magdaU/playwright-python-dulux-uk)
 > considered the same feature and **deliberately deferred** it, reasoning that a
 > production site whose layout is still visibly drifting would make snapshot baselines go
@@ -129,7 +137,7 @@ alternative). See [Architecture](architecture.md) for how it's wired.
 ### 4.3 Test design techniques
 
 - **Scenario / user-journey based** — each test mirrors a real customer task end to end.
-- **Equivalence partitioning** — one representative shade (`Gentle Lavender` / `Violet`)
+- **Equivalence partitioning** — one representative shade (`Violet Morning` / `Violet`)
   stands in for the colour-finder space; the *flow*, not the data permutation, is the risk.
 - **State verification** — basket starts empty → exactly 1 item with the right product and
   shade after adding (guards against silent over/under-counting).
@@ -155,7 +163,7 @@ alternative). See [Architecture](architecture.md) for how it's wired.
 |---|---|---|
 | **Local (headed)** | Developer machine, `headless=false` by default | Authoring and debugging — watch the journey run |
 | **Local (headless)** | `-Dheadless=true` | Fast local verification before pushing |
-| **Docker** | `docker compose up --build` | Reproducible run matching CI exactly (Java 21 + Chromium, `shm_size: 1gb`) |
+| **Docker** | `docker compose up --build` | Reproducible run matching CI exactly (Java 25 + Chromium, `shm_size: 1gb`) |
 | **CI** | GitHub Actions `ubuntu-latest`, headless | Gate on every push/PR; publishes the Allure report |
 
 The `HEADLESS` flag is resolved by [`PlaywrightConfig`](../src/test/java/com/github/magdalena/support/PlaywrightConfig.java)
@@ -202,10 +210,10 @@ via the `workflow_dispatch` input or the `CUCUMBER_TAGS` env var in Docker).
 
 **Pipeline** ([`.github/workflows/e2e-tests.yml`](../.github/workflows/e2e-tests.yml)) — two jobs:
 
-- `cucumber-smoke` (blocking): checkout → JDK 21 → install Chromium → run smoke suite
+- `cucumber-smoke` (blocking): checkout → JDK 25 → install Chromium → run smoke suite
   headless → generate Allure report → upload artifacts → publish to GitHub Pages (on
   `main`).
-- `visual-regression` (`continue-on-error: true`, non-blocking): checkout → JDK 21 →
+- `visual-regression` (`continue-on-error: true`, non-blocking): checkout → JDK 25 →
   install Chromium → run `VisualRegressionTest` → upload any pixel diffs as a build
   artifact. Deliberately separate from the smoke job so a real production layout change
   can't redden the push/PR gate — see §3.
@@ -235,7 +243,8 @@ and flaky-test signals (a test that fails then passes on re-run without a code c
 | **New-tab handling** for the Visualizer | Low | Medium | `context.waitForPage(...)` captures the popup deterministically on desktop |
 | **No test data isolation guarantees on prod** | Low | Medium | Flow stops before checkout; no orders created; fresh context per scenario |
 | **Single browser (Chromium) only** | Medium | Low | Accepted for now; cross-browser is on the roadmap (§13) |
-| **Product catalogue / basket markup drift** — a shade or locator this suite relies on can be removed or restructured by the retailer without notice | Medium | High | **Not yet materialised here**, but confirmed to happen on this exact site: the [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) — testing the same production site with the same pinned shade ("Gentle Lavender") and the same `getByLabel("Quantity")`-style basket locator this project still uses in [`CartPage`](../src/test/java/com/github/magdalena/page/pom/CartPage.java) — hit both a catalogue removal and a basket-markup redesign that broke locator uniqueness (see its [Lessons Learned #1](https://github.com/magdaU/playwright-python-dulux-uk/blob/main/docs/LESSONS_LEARNED.md#1-product-catalogue-drift--a-pinned-shade-disappeared-from-its-colour-family) and [#2](https://github.com/magdaU/playwright-python-dulux-uk/blob/main/docs/LESSONS_LEARNED.md#2-basket-ui-markup-drift--a-redesign-broke-a-locators-uniqueness-not-its-match)). Treated here as a foreseeable risk, not a hypothetical one — worth narrowing `getQuantity()` to a role-based `spinbutton` locator proactively (§14) rather than waiting to be surprised by it |
+| **Product catalogue drift** — a shade this suite relies on can be removed or restructured by the retailer without notice | Medium | High | **Materialised** (2026-09-04): "Gentle Lavender" was found removed from the "Violet" family while re-verifying the suite after the Java 25 upgrade — every purchase-journey test that browsed to it via the colour finder timed out. Confirmed on the live site (screenshot) and fixed by refreshing test data to "Violet Morning", present in the catalogue. The [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk) had already hit the *same* removal independently, refreshing to the *same* replacement shade — see [Lessons Learned #5](LESSONS_LEARNED.md#5-product-catalogue-drift-materialised-here-too) |
+| **Basket markup drift** — the basket quantity locator's uniqueness can be broken by a redesign | Medium | High | **Materialised** (2026-09-04): immediately after fixing the catalogue-drift row above, `CartPage.getQuantity()`'s `page.getByLabel("Quantity")` started failing with a Playwright strict-mode violation — the control had been redesigned into a `group` wrapping decrease/input/increase elements, all exposing an accessible name containing "Quantity". This was flagged as a foreseeable risk (§14) copied from the Python sibling's identical incident before it happened here; fixed the same way, by narrowing to `getByRole(AriaRole.SPINBUTTON, name="Quantity input")` — see [Lessons Learned #6](LESSONS_LEARNED.md#6-basket-markup-drift-materialised-here-too) |
 | **Navigation resolves the wrong element on a full page navigation** | Materialised | High | **Fixed** (2026-05-11): `clickDropdownFindColour()` triggers a full page navigation rather than a dropdown reveal; without an explicit `page.waitForLoadState()` afterwards, the next click resolved against the still-loading outgoing page and timed out. A same-day intermediate fix (filtering `clickFindColour()`'s locator to `visible=true`, to dodge a hidden duplicate "Find a colour" tab-link elsewhere on the page) was superseded once the real root cause — the missing load-state wait — was identified; see [Lessons Learned #1](LESSONS_LEARNED.md#1-navigation-resolves-a-stale-or-hidden-element-after-a-full-page-navigation) |
 | **Duplicated locator methods silently drift apart** | Materialised | Low | **Fixed** (2026-07-09): `chooseColour()` and a typo'd `choseSpecificTypeColor()` in `ColorSelectionPage` had identical bodies — a change to one without the other would have silently broken only half of the affected scenarios. Collapsed into a shared `clickButtonByName()` private helper; see [Lessons Learned #2](LESSONS_LEARNED.md#2-duplicated-locator-methods-that-could-silently-drift-apart) |
 | **CI reporting tool produces a different output path than the pipeline expects** | Materialised | Medium | **Fixed** (2026-05-06): `mvn allure:report` (the Maven plugin) writes to `target/site/allure-maven-plugin`, not the `target/allure-report` path the GitHub Pages publish step expected — the job appeared to succeed while publishing an empty/stale report. Switched to the Allure CLI (`allure generate ... -o target/allure-report`) with an explicit output directory; see [Lessons Learned #3](LESSONS_LEARNED.md#3-a-green-ci-step-can-still-publish-the-wrong-report) |
@@ -278,8 +287,9 @@ improvements, roughly in priority order:
   non-blocking CI job. See §3 for why this project made the opposite call from its
   [Python sibling](https://github.com/magdaU/playwright-python-dulux-uk), which deferred
   the same feature.
-- [ ] **Harden the basket quantity locator** — see §14 ("Basket quantity locator
-  fragility") for the fix and why it's foreseeable, not hypothetical.
+- [x] **Harden the basket quantity locator** — fixed 2026-09-04, the same day it was
+  flagged, once the risk materialised for real. See §10 ("Basket markup drift") and
+  [Lessons Learned #6](LESSONS_LEARNED.md#6-basket-markup-drift-materialised-here-too).
 - [ ] **Cross-browser** — add Firefox and WebKit projects to widen real coverage.
 - [ ] **Accessibility checks** — integrate an a11y scan into the critical journeys.
 - [ ] **Tablet viewport** — a third breakpoint between mobile and desktop.
@@ -297,8 +307,7 @@ uncovered and a concrete way each could be tested — not just a note that it's 
 | Area | Risk if left untested | How it could be tested | Priority |
 |---|---|---|---|
 | **Checkout / payment / order fulfilment** | A broken checkout ships unnoticed until a customer complaint or a revenue drop is reported — the single biggest gap given this is an e-commerce site | Not against production (no real transactions). Would need a retailer-provided staging/sandbox environment with a test payment provider before this is testable at all | High — blocked on environment access, not effort |
-| **Basket quantity locator fragility** | `getByLabel("Quantity")` matches by substring; the Python sibling's identical pattern broke when the basket was redesigned into a `group` wrapping three "Quantity"-labelled controls (§10) | Narrow `CartPage.getQuantity()` to `getByRole(AriaRole.SPINBUTTON, new Locator.GetByRoleOptions().setName("Quantity input"))` before, not after, a strict-mode failure forces the fix | Medium — foreseeable, cheap to fix now |
-| **Only one colour family / shade path exercised** (`Violet` / "Gentle Lavender") | A shade with no tester option, or a family with an unusual layout, could break the flow without being caught | Turn the purchase scenario into a Scenario Outline with 2-3 more family/shade pairs, including an edge case | Medium |
+| **Only one colour family / shade path exercised** (`Violet` / "Violet Morning") | A shade with no tester option, or a family with an unusual layout, could break the flow without being caught — this project's *previous* pinned shade ("Gentle Lavender") was in fact removed from the catalogue (§10) | Turn the purchase scenario into a Scenario Outline with 2-3 more family/shade pairs, including an edge case | Medium |
 | **Basket edit/remove flows** | Only *adding* a tester is verified; incrementing/decrementing quantity or removing an item is unverified | Extend `CartPage` with increment/decrement/remove actions and add a `@regression`-tagged scenario asserting basket state after each | Medium |
 | **Site search** | `NavigationComponent` exposes `searchClickOnPage()`/`inputColorOnSearchBoxAndEnter()` and it's exercised as setup for the Visualizer scenarios, but no scenario asserts search *itself* works for an arbitrary term | Add a scenario: search for a known shade, assert it navigates to that shade's detail page | Low–Medium |
 | **Negative / error-state paths** (e.g. a failed add-to-basket request) | The suite only proves the happy path; a customer-visible error state is invisible to it today | Use Playwright's `page.route()` to intercept and force an error response on the add-to-basket call, then assert the UI surfaces it | Medium |

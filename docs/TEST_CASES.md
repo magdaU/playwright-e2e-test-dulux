@@ -21,8 +21,8 @@
 | **Priority** | P1 |
 | **Automation** | ✅ [`tester_purchase.feature` — Scenario 1](../src/test/resources/features/tester_purchase.feature); also `TesterProductTest` |
 | **Preconditions** | Desktop viewport (`1920×1080`); basket is empty; cookie banner not yet dismissed |
-| **Steps** | 1. Open the home page and reject cookies.<br>2. Open "Find a colour" from the top nav.<br>3. Select colour family "Violet".<br>4. Select shade "Gentle Lavender".<br>5. Click "Buy a Tester in this colour".<br>6. Dismiss the confirmation alert.<br>7. Open the shopping cart. |
-| **Expected result** | Basket contains exactly 1 item; basket shows tester "Dulux Colour Tester" for shade "Gentle Lavender" |
+| **Steps** | 1. Open the home page and reject cookies.<br>2. Open "Find a colour" from the top nav.<br>3. Select colour family "Violet".<br>4. Select shade "Violet Morning".<br>5. Click "Buy a Tester in this colour".<br>6. Dismiss the confirmation alert.<br>7. Open the shopping cart. |
+| **Expected result** | Basket contains exactly 1 item; basket shows tester "Dulux Colour Tester" for shade "Violet Morning" |
 
 ### TC-02 — Mobile customer adds a tester from the colour finder
 | | |
@@ -69,7 +69,7 @@
 |---|---|
 | **Priority** | P1 |
 | **Automation** | ✅ [`visualizer_experience.feature` — Scenario 1](../src/test/resources/features/visualizer_experience.feature); also `VisualizerAppTest` |
-| **Preconditions** | Desktop viewport; customer is viewing shade "Gentle Lavender" (reached via search) |
+| **Preconditions** | Desktop viewport; customer is viewing shade "Violet Morning" (reached via search) |
 | **Steps** | 1. Click "Try our Visualizer App". |
 | **Expected result** | Visualizer opens in a **new browser tab**, at `https://www.dulux.co.uk/en/articles/dulux-visualizer-app` |
 
@@ -78,7 +78,7 @@
 |---|---|
 | **Priority** | P2 |
 | **Automation** | ✅ [`visualizer_experience.feature` — Scenario 2](../src/test/resources/features/visualizer_experience.feature); also `VisualizerAppTest` |
-| **Preconditions** | Mobile viewport; customer is viewing shade "Gentle Lavender" |
+| **Preconditions** | Mobile viewport; customer is viewing shade "Violet Morning" |
 | **Steps** | 1. Click "Try our Visualizer App". |
 | **Expected result** | No new tab; the page shows the message "Inconsistent store data, contact support@adjust.com" — documented, observed behaviour (see [Features Guide](FEATURES_GUIDE.md#visualizer-app)) |
 

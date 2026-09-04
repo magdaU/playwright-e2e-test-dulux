@@ -23,7 +23,7 @@ Also available as a [Python port](https://github.com/magdaU/playwright-python-du
 
 | Tool | Version | Purpose |
 |---|---|---|
-| Java | 21 | Language |
+| Java | 25 | Language |
 | Playwright | 1.50 | Browser automation (Chromium, Firefox, WebKit) |
 | JUnit 5 | – | Test runner, launched via `cucumber-junit-platform-engine` |
 | Cucumber | 7.18 | BDD layer — Gherkin feature files → JUnit test items |
